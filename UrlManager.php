@@ -63,7 +63,7 @@ class UrlManager extends \yii\web\UrlManager
     {
         /** @var LanguageProviderInterface $languageProvider */
         
-        $pattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
+//        $pattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
 //        var_dump($languages);
 //        die();
 //        var_dump('');
