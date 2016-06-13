@@ -6,8 +6,8 @@
   "authors": [
     {
       "name": "Saiko Ruslan",
-      "email": "ruslan260896@gmail.com"
-    },
+      "email": "ruslan.saiko.dev@gmail.com"
+    }
   ],
   "require": {
     "yiisoft/yii2": ">=2.0.4"

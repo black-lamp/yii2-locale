@@ -21,8 +21,8 @@ class UrlManager extends \yii\web\UrlManager
     public $detectInSession = true;
     public $detectInCookie = true;
 
-    private $languages = [];
-
+    public $languages = [];
+    
     public $showDefault = true;
     public $useShortSyntax = false;
     public $lowerCase = false;
@@ -51,9 +51,6 @@ class UrlManager extends \yii\web\UrlManager
         parent::init();
         $this->defaultLanguage = \Yii::$app->sourceLanguage;
         $this->registerDependencies();
-
-        $languageProvider = \Yii::$container->get('languageProvider');
-        $this->languages = $languageProvider->getLanguages();
     }
 
     public function registerDependencies()
@@ -65,7 +62,7 @@ class UrlManager extends \yii\web\UrlManager
     public function parseRequest($request)
     {
         /** @var LanguageProviderInterface $languageProvider */
-
+        
         $pattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
 //        var_dump($languages);
 //        die();
