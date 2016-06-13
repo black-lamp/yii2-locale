@@ -1,7 +1,7 @@
 <?php
-namespace common\components\locale;
+namespace bl\locale;
 
-use common\components\locale\provider\LanguageProviderInterface;
+use bl\locale\provider\LanguageProviderInterface;
 use yii\helpers\ArrayHelper;
 use yii\web\Cookie;
 use yii\web\UrlRule;

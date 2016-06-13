@@ -1,5 +1,5 @@
 <?php
-namespace common\components\locale\provider;
+namespace bl\locale\provider;
 
 use yii\base\Component;
 use yii\db\ActiveQuery;

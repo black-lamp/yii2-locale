@@ -1,6 +1,6 @@
 <?php
 
-namespace common\components\locale\provider;
+namespace bl\locale\provider;
 
 
 interface LanguageProviderInterface

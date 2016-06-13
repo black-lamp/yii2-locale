@@ -6,7 +6,7 @@
  * Time: 1:32
  */
 
-namespace common\components\locale\provider;
+namespace bl\locale\provider;
 
 
 use yii\base\Component;
