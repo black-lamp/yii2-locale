@@ -99,18 +99,15 @@ class UrlManager extends \yii\web\UrlManager
 
     public function createUrl($params)
     {
-        $param = $params[1];
-
-        $lang = isset($param[$this->languageKey]) ? $param[$this->languageKey] : $this->language;
-        unset($param[$this->languageKey]);
-
-        $params[1] = $param;
-        $lang = $this->lowerCase ? strtolower($lang) : $lang;
-        $lang = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $lang, 1) : $lang;
+        $language = $params[$this->languageKey];
+        $language = isset($language) ? $language : $this->language;
+        unset($params[$this->languageKey]);
+        $language = $this->lowerCase ? strtolower($language) : $language;
+        $language = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $language, 1) : $language;
 
 //        var_dump($lang);
-        return $this->showDefault || strcasecmp($lang, $this->defaultLanguage) != 0
-            ? substr_replace(parent::createUrl($params), !empty($lang) ? "/$lang" : '', strlen($this->baseUrl), 0)
+        return $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
+            ? substr_replace(parent::createUrl($params), !empty($language) ? "/$language" : '', strlen($this->baseUrl), 0)
             : parent::createUrl($params);
     }
 
