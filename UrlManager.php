@@ -2,26 +2,30 @@
 namespace bl\locale;
 
 use bl\locale\provider\LanguageProviderInterface;
+use bl\locale\receiver\CookieLanguageReceive;
+use bl\locale\receiver\ParamsLanguageReceive;
+use bl\locale\receiver\ReceiveContainer;
+use bl\locale\receiver\SessionLanguageReceive;
+use bl\locale\receiver\UrlLanguageReceive;
+use yii\base\InvalidValueException;
 use yii\helpers\ArrayHelper;
 use yii\web\Cookie;
 use yii\web\UrlRule;
-
+use \yii\web\UrlManager as BaseUrlManager;
 /**
  * Created by PhpStorm.
  * User: Ruslan
  * Date: 12.06.2016
  * Time: 15:46
  */
-class UrlManager extends \yii\web\UrlManager
+class UrlManager extends BaseUrlManager
 {
     public $languageKey = 'lang';
     public $sessionLanguageKey = '_lang';
     public $cookieLanguageKey = '_lang';
 
-    public $detectInSession = true;
-    public $detectInCookie = true;
-
-    public $languages = [];
+    public $detectInSession = false;
+    public $detectInCookie = false;
     
     public $showDefault = true;
     public $useShortSyntax = false;
@@ -55,31 +59,34 @@ class UrlManager extends \yii\web\UrlManager
 
     public function registerDependencies()
     {
-        \Yii::$container->set('common\components\locale\provider\LanguageProviderInterface', $this->languageProvider);
-        \Yii::$container->set('languageProvider', 'common\components\locale\provider\LanguageProviderInterface');
+        \Yii::$container->set('bl\locale\provider\LanguageProviderInterface', $this->languageProvider);
+        \Yii::$container->set('languageProvider', 'bl\locale\provider\LanguageProviderInterface');
     }
 
     public function parseRequest($request)
     {
-        /** @var LanguageProviderInterface $languageProvider */
-        
-//        $pattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
-//        var_dump($languages);
-//        die();
-//        var_dump('');
-//        var_dump('');
-//        var_dump($languages);
-        $mathed = preg_match('~^(?<language>\w{2}(?:-\w{2})?)/(?<url>.*)~i', $request->getPathInfo(), $mathes);
-//        var_dump($mathes);
-        $request->setPathInfo($mathed > 0 ? $mathes['url'] : $request->getPathInfo());
-        \Yii::$app->language = isset($mathes['language']) ? $mathes['language'] : \Yii::$app->language;
-        $this->language = $mathes['language'];
-//        var_dump($mathes);
-        if ($this->detectInCookie) {
+        /** @var LanguageProviderInterface $languagePovider */
+        $languagePovider = \Yii::$container->get('languageProvider');
+        $languages = $languagePovider->getLanguages();
+        $language = &\Yii::$app->language;
+        if (empty($languages)){
+            throw new InvalidValueException('languages not set');
+        }
+        $languagePattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
 
+
+        $mathed = preg_match("~^(?<language>(?:$languagePattern)?)/?(?<url>.*)~i", $request->getPathInfo(), $mathes);
+//        var_dump($request->getPathInfo());
+//        die();
+        $request->setPathInfo($mathed > 0 ? $mathes['url'] : $request->getPathInfo());
+        $this->language = !empty($mathes['language']) ? $mathes['language'] : \Yii::$app->sourceLanguage;
+        $language = $this->language;
+//        var_dump($language);
+//        die();
+        if ($this->detectInCookie) {
             \Yii::$app->response->cookies->add(new Cookie([
                 'name' => $this->cookieLanguageKey,
-                'value' => $mathes['language'],
+                'value' => $language,
             ]));
         }
 
@@ -87,10 +94,10 @@ class UrlManager extends \yii\web\UrlManager
 
             if (!\Yii::$app->session->isActive) {
                 \Yii::$app->session->open();
-                \Yii::$app->session->set($this->sessionLanguageKey, $mathes['language']);
+                \Yii::$app->session->set($this->sessionLanguageKey, $language);
                 \Yii::$app->session->close();
             } else {
-                \Yii::$app->session->set($this->sessionLanguageKey, $mathes['language']);
+                \Yii::$app->session->set($this->sessionLanguageKey, $language);
             }
         }
         $test = parent::parseRequest($request);
@@ -99,11 +106,36 @@ class UrlManager extends \yii\web\UrlManager
 
     public function createUrl($params)
     {
-        $language = $params[$this->languageKey];
-        $language = isset($language) ? $language : $this->language;
+        $receive = new ReceiveContainer();
+
+        $receive->addReceiver(new ParamsLanguageReceive($params, $this->languageKey));
+
+        if ($this->detectInSession){
+            $receive->addReceiver(new SessionLanguageReceive($this->sessionLanguageKey));
+        }
+
+        if ($this->detectInCookie){
+            $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
+        }
+
+        $language = $receive->getLanguage();
+
+//        var_dump($language);
+//        if (empty($language)) {
+//            $language = \Yii::$app->language;
+//        }
         unset($params[$this->languageKey]);
-        $language = $this->lowerCase ? strtolower($language) : $language;
-        $language = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $language, 1) : $language;
+//
+        if (!isset($language)){
+            $language = \Yii::$app->language;
+        }
+
+//
+//        $language = $params[$this->languageKey];
+
+        //$language = isset($language) ? $language : $this->language;
+//        $language = $this->lowerCase ? strtolower($language) : $language;
+//        $language = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $language, 1) : $language;
 
 //        var_dump($lang);
         return $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
