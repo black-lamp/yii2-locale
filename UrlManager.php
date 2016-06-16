@@ -7,11 +7,15 @@ use bl\locale\receiver\ParamsLanguageReceive;
 use bl\locale\receiver\ReceiveContainer;
 use bl\locale\receiver\SessionLanguageReceive;
 use bl\locale\receiver\UrlLanguageReceive;
+use bl\locale\saver\CookieLanguageSave;
+use bl\locale\saver\SaveConteiner;
+use bl\locale\saver\SessionLanguageSave;
 use yii\base\InvalidValueException;
 use yii\helpers\ArrayHelper;
 use yii\web\Cookie;
 use yii\web\UrlRule;
 use \yii\web\UrlManager as BaseUrlManager;
+
 /**
  * Created by PhpStorm.
  * User: Ruslan
@@ -26,7 +30,7 @@ class UrlManager extends BaseUrlManager
 
     public $detectInSession = false;
     public $detectInCookie = false;
-    
+
     public $showDefault = true;
     public $useShortSyntax = false;
     public $lowerCase = false;
@@ -69,37 +73,52 @@ class UrlManager extends BaseUrlManager
         $languagePovider = \Yii::$container->get('languageProvider');
         $languages = $languagePovider->getLanguages();
         $language = &\Yii::$app->language;
-        if (empty($languages)){
+        if (empty($languages)) {
             throw new InvalidValueException('languages not set');
         }
         $languagePattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
 
-
-        $mathed = preg_match("~^(?<language>(?:$languagePattern)?)/?(?<url>.*)~i", $request->getPathInfo(), $mathes);
-//        var_dump($request->getPathInfo());
-//        die();
-        $request->setPathInfo($mathed > 0 ? $mathes['url'] : $request->getPathInfo());
-        $this->language = !empty($mathes['language']) ? $mathes['language'] : \Yii::$app->sourceLanguage;
-        $language = $this->language;
-//        var_dump($language);
-//        die();
-        if ($this->detectInCookie) {
-            \Yii::$app->response->cookies->add(new Cookie([
-                'name' => $this->cookieLanguageKey,
-                'value' => $language,
-            ]));
-        }
+        $receive = new ReceiveContainer();
 
         if ($this->detectInSession) {
-
-            if (!\Yii::$app->session->isActive) {
-                \Yii::$app->session->open();
-                \Yii::$app->session->set($this->sessionLanguageKey, $language);
-                \Yii::$app->session->close();
-            } else {
-                \Yii::$app->session->set($this->sessionLanguageKey, $language);
-            }
+            $receive->addReceiver(new SessionLanguageReceive($this->sessionLanguageKey));
         }
+        if ($this->detectInCookie) {
+            $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
+        }
+        $languageFromStorage = $receive->getLanguage();
+
+        $mathed = preg_match("~^(?<language>(?:$languagePattern)?)/?(?<url>.*)~i", $request->getPathInfo(), $mathes);
+
+        $request->setPathInfo($mathed > 0 ? $mathes['url'] : $request->getPathInfo());
+        $this->language = !empty($mathes['language']) && !$this->showDefault ? $mathes['language'] : $languageFromStorage;
+        $language = $this->language;
+
+        $saver = new SaveConteiner();
+        if ($this->detectInSession) {
+            $saver->add(new SessionLanguageSave($this->sessionLanguageKey));
+        }
+        if ($this->detectInCookie) {
+            $saver->add(new CookieLanguageSave($this->cookieLanguageKey));
+        }
+        $saver->save($language);
+//        if ($this->detectInCookie) {
+//            \Yii::$app->response->cookies->add(new Cookie([
+//                'name' => $this->cookieLanguageKey,
+//                'value' => $language,
+//            ]));
+//        }
+//
+//        if ($this->detectInSession) {
+//
+//            if (!\Yii::$app->session->isActive) {
+//                \Yii::$app->session->open();
+//                \Yii::$app->session->set($this->sessionLanguageKey, $language);
+//                \Yii::$app->session->close();
+//            } else {
+//                \Yii::$app->session->set($this->sessionLanguageKey, $language);
+//            }
+//        }
         $test = parent::parseRequest($request);
         return $test;
     }
@@ -110,11 +129,11 @@ class UrlManager extends BaseUrlManager
 
         $receive->addReceiver(new ParamsLanguageReceive($params, $this->languageKey));
 
-        if ($this->detectInSession){
+        if ($this->detectInSession) {
             $receive->addReceiver(new SessionLanguageReceive($this->sessionLanguageKey));
         }
 
-        if ($this->detectInCookie){
+        if ($this->detectInCookie) {
             $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
         }
 
@@ -125,19 +144,15 @@ class UrlManager extends BaseUrlManager
 //            $language = \Yii::$app->language;
 //        }
         unset($params[$this->languageKey]);
-//
-        if (!isset($language)){
+
+        if (!isset($language)) {
             $language = \Yii::$app->language;
         }
 
-//
-//        $language = $params[$this->languageKey];
+//        $language = isset($language) ? $language : $this->language;
+        $language = $this->lowerCase ? strtolower($language) : $language;
+        $language = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $language, 1) : $language;
 
-        //$language = isset($language) ? $language : $this->language;
-//        $language = $this->lowerCase ? strtolower($language) : $language;
-//        $language = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $language, 1) : $language;
-
-//        var_dump($lang);
         return $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
             ? substr_replace(parent::createUrl($params), !empty($language) ? "/$language" : '', strlen($this->baseUrl), 0)
             : parent::createUrl($params);
