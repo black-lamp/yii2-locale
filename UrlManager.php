@@ -28,8 +28,8 @@ class UrlManager extends BaseUrlManager
     public $sessionLanguageKey = '_lang';
     public $cookieLanguageKey = '_lang';
 
-    public $detectInSession = false;
-    public $detectInCookie = false;
+    public $detectInSession = true;
+    public $detectInCookie = true;
 
     public $showDefault = true;
     public $useShortSyntax = false;
@@ -73,9 +73,11 @@ class UrlManager extends BaseUrlManager
         $languagePovider = \Yii::$container->get('languageProvider');
         $languages = $languagePovider->getLanguages();
         $language = &\Yii::$app->language;
+
         if (empty($languages)) {
             throw new InvalidValueException('languages not set');
         }
+
         $languagePattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
 
         $receive = new ReceiveContainer();
@@ -84,17 +86,26 @@ class UrlManager extends BaseUrlManager
             $receive->addReceiver(new SessionLanguageReceive($this->sessionLanguageKey));
         }
         if ($this->detectInCookie) {
+
             $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
         }
+
         $languageFromStorage = $receive->getLanguage();
 
+        //todo: fix mathes
         $mathed = preg_match("~^(?<language>(?:$languagePattern)?)/?(?<url>.*)~i", $request->getPathInfo(), $mathes);
 
-        $request->setPathInfo($mathed > 0 ? $mathes['url'] : $request->getPathInfo());
-        $this->language = !empty($mathes['language']) && !$this->showDefault ? $mathes['language'] : $languageFromStorage;
-        $language = $this->language;
+        $request->setPathInfo(isset($mathes['language']) ? $mathes['url'] : $request->getPathInfo());
+        $this->language = !empty($mathes['language']) && !$this->showDefault
+            ? $mathes['language']
+            :
+            (is_null($languageFromStorage)
+                ? $language
+                : $languageFromStorage);
 
+        $language = $this->language;
         $saver = new SaveConteiner();
+
         if ($this->detectInSession) {
             $saver->add(new SessionLanguageSave($this->sessionLanguageKey));
         }
@@ -102,31 +113,19 @@ class UrlManager extends BaseUrlManager
             $saver->add(new CookieLanguageSave($this->cookieLanguageKey));
         }
         $saver->save($language);
-//        if ($this->detectInCookie) {
-//            \Yii::$app->response->cookies->add(new Cookie([
-//                'name' => $this->cookieLanguageKey,
-//                'value' => $language,
-//            ]));
-//        }
-//
-//        if ($this->detectInSession) {
-//
-//            if (!\Yii::$app->session->isActive) {
-//                \Yii::$app->session->open();
-//                \Yii::$app->session->set($this->sessionLanguageKey, $language);
-//                \Yii::$app->session->close();
-//            } else {
-//                \Yii::$app->session->set($this->sessionLanguageKey, $language);
-//            }
-//        }
-        $test = parent::parseRequest($request);
-        return $test;
+        return parent::parseRequest($request);
     }
 
     public function createUrl($params)
     {
-        $receive = new ReceiveContainer();
+        $params = is_string($params) ? [0 => $params] : $params;
 
+
+        $languagePovider = \Yii::$container->get('languageProvider');
+        $languages = $languagePovider->getLanguages();
+
+
+        $receive = new ReceiveContainer();
         $receive->addReceiver(new ParamsLanguageReceive($params, $this->languageKey));
 
         if ($this->detectInSession) {
@@ -139,10 +138,7 @@ class UrlManager extends BaseUrlManager
 
         $language = $receive->getLanguage();
 
-//        var_dump($language);
-//        if (empty($language)) {
-//            $language = \Yii::$app->language;
-//        }
+
         unset($params[$this->languageKey]);
 
         if (!isset($language)) {

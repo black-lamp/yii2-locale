@@ -7,16 +7,28 @@ return [
     'bootstrap' => [],
     'components' => [
         'request' => [
+            'cookieValidationKey' => 'banana',
             'enableCookieValidation' => false,
             'isConsoleRequest' => false,
             'hostInfo' => 'http://localhost',
             'baseUrl' => '/',
 
         ],
+
         'urlManager' => [
-            'class' => \common\components\locale\UrlManager::className(),
+            'class' => \bl\locale\UrlManager::className(),
             'baseUrl' => '/',
-            'showScriptName' => true,
+            'showScriptName' => false,
+            'enablePrettyUrl' => true,
+            'languageProvider' => [
+                'class' => '\bl\locale\provider\ConfigLanguageProvider',
+                'languages' => [
+                    'ru-ru',
+                    'en-us',
+                    'en-UK',
+                    'ua',
+                ]
+            ],
             'rules' => [
 
             ],

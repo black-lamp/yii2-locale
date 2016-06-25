@@ -3,7 +3,6 @@
 namespace bl\locale\receiver;
 
 
-
 use bl\locale\provider\LanguageProviderInterface;
 use yii\base\Object;
 
@@ -11,7 +10,7 @@ class CookieLanguageReceive extends Object implements LanguageReceiveInterface
 {
     protected $_languageKey;
 
-    public function __construct($languageKey,  array $config = null)
+    public function __construct($languageKey, array $config = null)
     {
         $this->_languageKey = $languageKey;
         parent::__construct($config);
@@ -22,9 +21,11 @@ class CookieLanguageReceive extends Object implements LanguageReceiveInterface
     {
         $language = null;
         $key = $this->_languageKey;
-        $language = \Yii::$app->request->cookies->get($key)->value;
         
-        if (isset($language)){
+        if (\Yii::$app->request->cookies->has($key)) {
+            $language = \Yii::$app->request->cookies->get($key)->value;
+        }
+        if (isset($language)) {
             return $language;
         }
     }

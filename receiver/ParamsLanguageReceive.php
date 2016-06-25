@@ -20,7 +20,13 @@ class ParamsLanguageReceive extends Object implements LanguageReceiveInterface
     /** @var array */
     private $_params;
 
-    public function __construct(array $params, $languageKey,  array $config = null)
+    /**
+     * ParamsLanguageReceive constructor.
+     * @param array|string $params
+     * @param string $languageKey
+     * @param array|null $config
+     */
+    public function __construct($params, $languageKey,  array $config = null)
     {
         $this->_params = $params;
         $this->_languageKey = $languageKey;
@@ -31,7 +37,9 @@ class ParamsLanguageReceive extends Object implements LanguageReceiveInterface
     public function getLanguage()
     {
         $language = null;
-        $language = $this->_params[$this->_languageKey];
+        if (key_exists($this->_languageKey, $this->_params)) {
+            $language = $this->_params[$this->_languageKey];
+        }
         if (isset($language)) {
             return $language;
         }
