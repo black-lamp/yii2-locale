@@ -68,7 +68,7 @@ class ParseRequestTest extends bl\locale\tests\unit\TestCase
 
 
         $url = 'site/index';
-        $language = 'ua-UK';
+        $language = 'uk-UA';
         $app->session->set($urlManager->sessionLanguageKey, $language);
 
         $request = $app->request;
@@ -90,7 +90,7 @@ class ParseRequestTest extends bl\locale\tests\unit\TestCase
         $urlManager->detectInCookie = false;
         $urlManager->detectInSession = false;
 
-        $language = 'ua-UK';
+        $language = 'uk-UA';
         $url = "$language/site/index";
 
         $request = $app->request;

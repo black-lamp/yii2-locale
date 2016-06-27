@@ -26,7 +26,8 @@ return [
                     'ru-ru',
                     'en-us',
                     'en-UK',
-                    'ua',
+                    'uk-UA',
+                    'uk',
                 ]
             ],
             'rules' => [

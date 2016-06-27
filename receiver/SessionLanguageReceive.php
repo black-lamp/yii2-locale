@@ -15,7 +15,12 @@ use yii\base\Object;
 class SessionLanguageReceive extends Object implements LanguageReceiveInterface
 {
     protected $_languageKey;
-    
+
+    /**
+     * SessionLanguageReceive constructor.
+     * @param string $languageKey
+     * @param array|null $config
+     */
     public function __construct($languageKey, array $config = null)
     {
         $this->_languageKey = $languageKey;

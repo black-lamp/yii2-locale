@@ -15,6 +15,12 @@ abstract class BaseSave extends Object implements LanguageSaveInterface
 {
     /** @var string */
     protected $_key;
+
+    /**
+     * BaseSave constructor.
+     * @param string $key
+     * @param array|null $config
+     */
     public function __construct($key, array $config = null)
     {
         $this->_key = $key;

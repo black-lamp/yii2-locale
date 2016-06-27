@@ -48,7 +48,8 @@ class DbLanguageProvider extends Component implements LanguageProviderInterface
             ->from($this->table)
             ->andFilterWhere($this->languageCondition)
             ->all(\Yii::$app->get($this->db));
-        $data =  ArrayHelper::map($result, $this->localeField, $this->languageField);
+//        $data =  ArrayHelper::map($result, $this->localeField, $this->languageField);
+        return ArrayHelper::getColumn($result, $this->localeField);
         return $data;
 
     }

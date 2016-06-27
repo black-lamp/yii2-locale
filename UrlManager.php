@@ -65,7 +65,8 @@ class UrlManager extends BaseUrlManager
         parent::init();
         $this->defaultLanguage = \Yii::$app->sourceLanguage;
         $this->conteiner = new Container();
-        if (!isset($languageProvider)){
+
+        if (!isset($this->languageProvider)) {
             throw new InvalidConfigException('$languageProvider must be set');
         }
 
@@ -89,87 +90,105 @@ class UrlManager extends BaseUrlManager
         return $languageProvider->getLanguages();
     }
 
-    public function parseRequest($request)
-    {
-        $allowedLanguages = $this->getAllowedLanguages();
-
-        $url = $request->getPathInfo();
-        if ($allowedLanguages){
-            throw new InvalidConfigException('empty language list');
-        }
-        if (ArrayHelper::isIndexed($allowedLanguages, true)){
-            $allowedLanguages = array_values($allowedLanguages);
-            $languagePattern = implode('|', $allowedLanguages);
-            $matchCount = preg_match('~^(?<id>(?<language>\w{2}\b)(?:-(?<locale>\w{2}))?)~', $url, $localeMatch);
-            if ($matchCount > 0) {
-                
-            }
-
-        }
-
-
-        $languagePattern = implode()
-
-        return parent::parseRequest($request);
-    }
-
-
-
 //    public function parseRequest($request)
 //    {
-//        /** @var LanguageProviderInterface $languagePovider */
-//        $languagePovider = \Yii::$container->get('languageProvider');
-//        $languages = $languagePovider->getLanguages();
-//        $language = &\Yii::$app->language;
+//        $allowedLanguages = $this->getAllowedLanguages();
+//        $url = $request->getPathInfo();
+//        $language = null;
 //
-//        if (empty($languages)) {
-//            throw new InvalidValueException('languages not set');
+//        if (empty($allowedLanguages)) {
+//            throw new InvalidConfigException('empty language list');
 //        }
+//        $pattern = '~^(?<id>(?<language>\w{2}\b)(?:-(?<locale>\w{2}))?)~';
+//        $matchCount = preg_match($pattern, $url, $localeMatch);
+//        $languageInUrl = $matchCount > 0;
 //
-//        $languagePattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
+//        $allowedLanguages = array_values($allowedLanguages);
+//
+//        if ($languageInUrl) {
+//            $localeId = $localeMatch['id'];
+//            $keyExists = array_search(strtolower($localeId), array_map('strtolower', $allowedLanguages));
+//
+//            if ($keyExists !== false) {
+//                \Yii::$app->language = $localeId;
+//                $request->setPathInfo(preg_replace("~^$localeId/?~i", '', $url));
+//            } else {
+//                throw new InvalidConfigException("Language '$localeId' not supported");
+//            }
+//        }
 //
 //        $receive = new ReceiveContainer();
-//
-//        if ($this->detectInSession) {
-//            $receive->addReceiver(new SessionLanguageReceive($this->sessionLanguageKey));
-//        }
-//        if ($this->detectInCookie) {
-//
-//            $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
-//        }
-//
-//        $languageFromStorage = $receive->getLanguage();
-//
-//        //todo: fix mathes
-//        $mathed = preg_match("~^(?<language>(?:$languagePattern)?)/?(?<url>.*)~i", $request->getPathInfo(), $mathes);
-//
-//        $request->setPathInfo(isset($mathes['language']) ? $mathes['url'] : $request->getPathInfo());
-//        $this->language = !empty($mathes['language']) && !$this->showDefault
-//            ? $mathes['language']
-//            :
-//            (is_null($languageFromStorage)
-//                ? $language
-//                : $languageFromStorage);
-//
-//        $language = $this->language;
 //        $saver = new SaveConteiner();
-//
-//        if ($this->detectInSession) {
+//        if (!$languageInUrl && $this->detectInSession) {
+//            $receive->addReceiver(new SessionLanguageReceive($this->sessionLanguageKey));
 //            $saver->add(new SessionLanguageSave($this->sessionLanguageKey));
-//        }
-//        if ($this->detectInCookie) {
+//        } elseif (!$languageInUrl && $this->detectInCookie) {
+//            $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
 //            $saver->add(new CookieLanguageSave($this->cookieLanguageKey));
 //        }
-//        $saver->save($language);
+//
+//        $language = $receive->getLanguage();
+//        \Yii::$app->language = (!$languageInUrl && isset($language)) ? $language : \Yii::$app->language;
+//        $saver->save(\Yii::$app->language);
+//
 //        return parent::parseRequest($request);
 //    }
+
+
+
+    public function parseRequest($request)
+    {
+        /** @var LanguageProviderInterface $languagePovider */
+        $languagePovider = $this->conteiner->get('languageProvider');
+        $languages = $languagePovider->getLanguages();
+        $language = &\Yii::$app->language;
+        if (empty($languages)) {
+            throw new InvalidValueException('languages not set');
+        }
+
+        $languagePattern = implode('|', ArrayHelper::merge(array_keys($languages), array_filter(array_values($languages))));
+
+        $receive = new ReceiveContainer();
+        if ($this->detectInSession) {
+            $receive->addReceiver(new SessionLanguageReceive($this->sessionLanguageKey));
+        }
+        if ($this->detectInCookie) {
+
+            $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
+        }
+
+        $languageFromStorage = $receive->getLanguage();
+
+        //todo: fix mathes
+        $mathed = preg_match("~^(?<language>(?:$languagePattern)?)/?(?<url>.*)~i", $request->getPathInfo(), $mathes);
+
+        $request->setPathInfo(isset($mathes['language']) ? $mathes['url'] : $request->getPathInfo());
+        $this->language = !empty($mathes['language']) && !$this->showDefault
+            ? $mathes['language']
+            :
+            (is_null($languageFromStorage)
+                ? $language
+                : $languageFromStorage);
+
+        $language = $this->language;
+        $saver = new SaveConteiner();
+
+        if ($this->detectInSession) {
+            $saver->add(new SessionLanguageSave($this->sessionLanguageKey));
+        }
+        if ($this->detectInCookie) {
+            $saver->add(new CookieLanguageSave($this->cookieLanguageKey));
+        }
+        $saver->save($language);
+        return parent::parseRequest($request);
+    }
 
     public function createUrl($params)
     {
         $params = is_string($params) ? [0 => $params] : $params;
 
 
-        $languagePovider = \Yii::$container->get('languageProvider');
+        $languagePovider = $this->conteiner->get('languageProvider');
         $languages = $languagePovider->getLanguages();
 
 
@@ -183,8 +202,8 @@ class UrlManager extends BaseUrlManager
         if ($this->detectInCookie) {
             $receive->addReceiver(new CookieLanguageReceive($this->cookieLanguageKey));
         }
-
         $language = $receive->getLanguage();
+
 
 
         unset($params[$this->languageKey]);
