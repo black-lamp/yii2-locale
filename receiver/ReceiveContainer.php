@@ -1,15 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Ruslan
- * Date: 14.06.2016
- * Time: 16:29
- */
-
 namespace bl\locale\receiver;
-
-use common\components\locale\provider\LanguageProviderInterface;
-
 
 class ReceiveContainer implements LanguageReceiveInterface
 {
@@ -19,7 +9,8 @@ class ReceiveContainer implements LanguageReceiveInterface
     public function getLanguage()
     {
         foreach ($this->receiver as $receiver) {
-            if (!empty(($language = $receiver->getLanguage()))) {
+            $language = $receiver->getLanguage();
+            if (!empty($language)) {
                 return $language;
             }
         }
