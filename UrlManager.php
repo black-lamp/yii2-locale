@@ -15,6 +15,7 @@ use yii\base\InvalidValueException;
 use yii\di\Container;
 use yii\helpers\ArrayHelper;
 use yii\web\Cookie;
+use yii\web\NotFoundHttpException;
 use yii\web\UrlRule;
 use \yii\web\UrlManager as BaseUrlManager;
 
@@ -30,8 +31,8 @@ class UrlManager extends BaseUrlManager
     public $sessionLanguageKey = '_lang';
     public $cookieLanguageKey = '_lang';
 
-    public $detectInSession = true;
-    public $detectInCookie = true;
+    public $detectInSession = false;
+    public $detectInCookie = false;
 
     public $showDefault = true;
     public $useShortSyntax = false;
@@ -135,7 +136,6 @@ class UrlManager extends BaseUrlManager
 //    }
 
 
-
     public function parseRequest($request)
     {
         /** @var LanguageProviderInterface $languagePovider */
@@ -163,14 +163,16 @@ class UrlManager extends BaseUrlManager
         $mathed = preg_match("~^(?<language>(?:$languagePattern)?)/?(?<url>.*)~i", $request->getPathInfo(), $mathes);
 
         $request->setPathInfo(isset($mathes['language']) ? $mathes['url'] : $request->getPathInfo());
-        $this->language = !empty($mathes['language']) && !$this->showDefault
-            ? $mathes['language']
-            :
-            (is_null($languageFromStorage)
-                ? $language
-                : $languageFromStorage);
-
-        $language = $this->language;
+        $language = !empty($mathes['language']) ? $mathes['language'] : \Yii::$app->sourceLanguage;
+//        && !$this->showDefault
+//            ? $mathes['language']
+//            :
+//            (is_null($languageFromStorage)
+//                ? $language
+//                : $languageFromStorage);
+        if (!$this->showDefault && strtolower($mathes['language']) == strtolower(\Yii::$app->sourceLanguage)) {
+            throw new NotFoundHttpException();
+        }
         $saver = new SaveConteiner();
 
         if ($this->detectInSession) {
@@ -205,13 +207,12 @@ class UrlManager extends BaseUrlManager
         $language = $receive->getLanguage();
 
 
-
         unset($params[$this->languageKey]);
 
         if (!isset($language)) {
             $language = \Yii::$app->language;
         }
-
+        $this->language = $language;
 //        $language = isset($language) ? $language : $this->language;
         $language = $this->lowerCase ? strtolower($language) : $language;
         $language = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $language, 1) : $language;
