@@ -171,7 +171,7 @@ class UrlManager extends BaseUrlManager
 //                ? $language
 //                : $languageFromStorage);
         if (!$this->showDefault && strtolower($mathes['language']) == strtolower(\Yii::$app->sourceLanguage)) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException(\Yii::t('yii', 'Page not found.'));
         }
         $saver = new SaveConteiner();
 
