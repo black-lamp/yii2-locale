@@ -6,7 +6,6 @@ use bl\locale\receiver\CookieLanguageReceive;
 use bl\locale\receiver\ParamsLanguageReceive;
 use bl\locale\receiver\ReceiveContainer;
 use bl\locale\receiver\SessionLanguageReceive;
-use bl\locale\receiver\UrlLanguageReceive;
 use bl\locale\saver\CookieLanguageSave;
 use bl\locale\saver\SaveConteiner;
 use bl\locale\saver\SessionLanguageSave;
@@ -14,9 +13,7 @@ use yii\base\InvalidConfigException;
 use yii\base\InvalidValueException;
 use yii\di\Container;
 use yii\helpers\ArrayHelper;
-use yii\web\Cookie;
 use yii\web\NotFoundHttpException;
-use yii\web\UrlRule;
 use \yii\web\UrlManager as BaseUrlManager;
 
 /**
@@ -217,9 +214,11 @@ class UrlManager extends BaseUrlManager
         $language = $this->lowerCase ? strtolower($language) : $language;
         $language = $this->useShortSyntax ? preg_replace('~(\w{2})-\w{2}~i', '$1', $language, 1) : $language;
 
-        return $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
-            ? substr_replace(parent::createUrl($params), !empty($language) ? "/$language" : '', strlen($this->baseUrl), 0)
-            : parent::createUrl($params);
-    }
 
+        $url = substr_replace(parent::createUrl($params), !empty($language) ? "/$language" : '', strlen($this->baseUrl), 0);
+        $url = rtrim($url, '/');
+
+        return $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
+            ? $url : parent::createUrl($params);
+    }
 }
