@@ -187,8 +187,8 @@ class UrlManager extends BaseUrlManager
         $params = is_string($params) ? [0 => $params] : $params;
 
 
-        $languagePovider = $this->conteiner->get('languageProvider');
-        $languages = $languagePovider->getLanguages();
+        /*$languagePovider = $this->conteiner->get('languageProvider');
+        $languages = $languagePovider->getLanguages();*/
 
 
         $receive = new ReceiveContainer();
