@@ -9,6 +9,7 @@ use bl\locale\receiver\SessionLanguageReceive;
 use bl\locale\saver\CookieLanguageSave;
 use bl\locale\saver\SaveConteiner;
 use bl\locale\saver\SessionLanguageSave;
+use Yii;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidValueException;
 use yii\di\Container;
@@ -203,11 +204,13 @@ class UrlManager extends BaseUrlManager
         }
         $language = $receive->getLanguage();
 
-
         unset($params[$this->languageKey]);
-
+        $currentLang = Yii::$app->language;
         if (!isset($language)) {
-            $language = \Yii::$app->language;
+            $language = $currentLang;
+        }
+        else {
+            Yii::$app->language = $language;
         }
         $this->language = $language;
 //        $language = isset($language) ? $language : $this->language;
@@ -218,7 +221,11 @@ class UrlManager extends BaseUrlManager
         $url = substr_replace(parent::createUrl($params), !empty($language) ? "/$language" : '', strlen($this->baseUrl), 0);
         $url = rtrim($url, '/');
 
-        return $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
+        $result = $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
             ? $url : parent::createUrl($params);
+
+        Yii::$app->language = $currentLang;
+
+        return $result;
     }
 }
