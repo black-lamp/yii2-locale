@@ -136,7 +136,6 @@ class UrlManager extends BaseUrlManager
 
     public function parseRequest($request)
     {
-        Yii::beginProfile('bl\locale\UrlManager::parseRequest()', 'bl\locale\UrlManager::parseRequest()');
         /** @var LanguageProviderInterface $languagePovider */
         $languagePovider = $this->conteiner->get('languageProvider');
         $languages = $languagePovider->getLanguages();
@@ -181,13 +180,11 @@ class UrlManager extends BaseUrlManager
             $saver->add(new CookieLanguageSave($this->cookieLanguageKey));
         }
         $saver->save($language);
-        Yii::endProfile('bl\locale\UrlManager::parseRequest()', 'bl\locale\UrlManager::parseRequest()');
         return parent::parseRequest($request);
     }
 
     public function createUrl($params)
     {
-        Yii::beginProfile('bl\locale\UrlManager::createUrl()', 'bl\locale\UrlManager::createUrl()');
         $params = is_string($params) ? [0 => $params] : $params;
 
 
@@ -207,11 +204,13 @@ class UrlManager extends BaseUrlManager
         }
         $language = $receive->getLanguage();
 
-
         unset($params[$this->languageKey]);
-
+        $currentLang = Yii::$app->language;
         if (!isset($language)) {
-            $language = \Yii::$app->language;
+            $language = $currentLang;
+        }
+        else {
+            Yii::$app->language = $language;
         }
         $this->language = $language;
 //        $language = isset($language) ? $language : $this->language;
@@ -222,8 +221,11 @@ class UrlManager extends BaseUrlManager
         $url = substr_replace(parent::createUrl($params), !empty($language) ? "/$language" : '', strlen($this->baseUrl), 0);
         $url = rtrim($url, '/');
 
-        Yii::endProfile('bl\locale\UrlManager::createUrl()', 'bl\locale\UrlManager::createUrl()');
-        return $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
+        $result = $this->showDefault || strcasecmp($language, $this->defaultLanguage) != 0
             ? $url : parent::createUrl($params);
+
+        Yii::$app->language = $currentLang;
+
+        return $result;
     }
 }
