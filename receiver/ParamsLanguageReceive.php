@@ -10,10 +10,10 @@ namespace bl\locale\receiver;
 
 
 use bl\locale\provider\LanguageProviderInterface;
-use yii\base\Object;
+use yii\base\BaseObject;
 use yii\helpers\ArrayHelper;
 
-class ParamsLanguageReceive extends Object implements LanguageReceiveInterface
+class ParamsLanguageReceive extends BaseObject implements LanguageReceiveInterface
 {
     /** @var string */
     protected $_languageKey;

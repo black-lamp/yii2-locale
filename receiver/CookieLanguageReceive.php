@@ -4,9 +4,9 @@ namespace bl\locale\receiver;
 
 
 use bl\locale\provider\LanguageProviderInterface;
-use yii\base\Object;
+use yii\base\BaseObject;
 
-class CookieLanguageReceive extends Object implements LanguageReceiveInterface
+class CookieLanguageReceive extends BaseObject implements LanguageReceiveInterface
 {
     protected $_languageKey;
 

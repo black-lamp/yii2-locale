@@ -10,9 +10,9 @@ namespace bl\locale\receiver;
 
 
 use bl\locale\provider\LanguageProviderInterface;
-use yii\base\Object;
+use yii\base\BaseObject;
 
-class SessionLanguageReceive extends Object implements LanguageReceiveInterface
+class SessionLanguageReceive extends BaseObject implements LanguageReceiveInterface
 {
     protected $_languageKey;
 

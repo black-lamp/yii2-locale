@@ -9,9 +9,9 @@
 namespace bl\locale\saver;
 
 
-use yii\base\Object;
+use yii\base\BaseObject;
 
-abstract class BaseSave extends Object implements LanguageSaveInterface
+abstract class BaseSave extends BaseObject implements LanguageSaveInterface
 {
     /** @var string */
     protected $_key;
